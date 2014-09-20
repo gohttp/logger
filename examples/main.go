@@ -21,5 +21,10 @@ func main() {
 		io.Copy(res, page.Body)
 	}))
 
+	a.Get("/error", http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		res.WriteHeader(500)
+		res.Write([]byte("boom"))
+	}))
+
 	a.Listen(":3000")
 }

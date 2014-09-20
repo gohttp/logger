@@ -34,7 +34,11 @@ func New() func(http.Handler) http.Handler {
 			log.Info(">> %s %s", req.Method, req.RequestURI)
 			h.ServeHTTP(res, req)
 			size := humanize.Bytes(uint64(res.written))
-			log.Info("<< %s %s %d (%s) in %s", req.Method, req.RequestURI, res.status, size, time.Since(start))
+			if res.status >= 500 {
+				log.Error("<< %s %s %d (%s) in %s", req.Method, req.RequestURI, res.status, size, time.Since(start))
+			} else {
+				log.Info("<< %s %s %d (%s) in %s", req.Method, req.RequestURI, res.status, size, time.Since(start))
+			}
 		})
 	}
 }
