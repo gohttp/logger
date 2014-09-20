@@ -28,16 +28,16 @@ func (w *wrapper) Write(b []byte) (int, error) {
 // New logger middleware.
 func New() func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
 			res := &wrapper{w, 0, 200}
-			log.Info(">> %s %s", req.Method, req.RequestURI)
-			h.ServeHTTP(res, req)
+			log.Info(">> %s %s", r.Method, r.RequestURI)
+			h.ServeHTTP(w, r)
 			size := humanize.Bytes(uint64(res.written))
 			if res.status >= 500 {
-				log.Error("<< %s %s %d (%s) in %s", req.Method, req.RequestURI, res.status, size, time.Since(start))
+				log.Error("<< %s %s %d (%s) in %s", r.Method, r.RequestURI, res.status, size, time.Since(start))
 			} else {
-				log.Info("<< %s %s %d (%s) in %s", req.Method, req.RequestURI, res.status, size, time.Since(start))
+				log.Info("<< %s %s %d (%s) in %s", r.Method, r.RequestURI, res.status, size, time.Since(start))
 			}
 		})
 	}
