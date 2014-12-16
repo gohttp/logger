@@ -5,6 +5,11 @@ import "github.com/segmentio/go-log"
 import "net/http"
 import "time"
 
+// Logger middleware.
+type Logger struct {
+	Handler http.Handler
+}
+
 // wrapper to capture status.
 type wrapper struct {
 	http.ResponseWriter
@@ -28,17 +33,20 @@ func (w *wrapper) Write(b []byte) (int, error) {
 // New logger middleware.
 func New() func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			start := time.Now()
-			res := &wrapper{w, 0, 200}
-			log.Info(">> %s %s", r.Method, r.RequestURI)
-			h.ServeHTTP(res, r)
-			size := humanize.Bytes(uint64(res.written))
-			if res.status >= 500 {
-				log.Error("<< %s %s %d (%s) in %s", r.Method, r.RequestURI, res.status, size, time.Since(start))
-			} else {
-				log.Info("<< %s %s %d (%s) in %s", r.Method, r.RequestURI, res.status, size, time.Since(start))
-			}
-		})
+		return &Logger{h}
+	}
+}
+
+// ServeHTTP implementation.
+func (l *Logger) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	res := &wrapper{w, 0, 200}
+	log.Info(">> %s %s", r.Method, r.RequestURI)
+	l.Handler.ServeHTTP(res, r)
+	size := humanize.Bytes(uint64(res.written))
+	if res.status >= 500 {
+		log.Error("<< %s %s %d (%s) in %s", r.Method, r.RequestURI, res.status, size, time.Since(start))
+	} else {
+		log.Info("<< %s %s %d (%s) in %s", r.Method, r.RequestURI, res.status, size, time.Since(start))
 	}
 }
