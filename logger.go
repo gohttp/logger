@@ -46,6 +46,16 @@ func New() func(http.Handler) http.Handler {
 	}
 }
 
+// NewLogger logger middleware with the given logger.
+func NewLogger(log *log.Logger) func(http.Handler) http.Handler {
+	return func(h http.Handler) http.Handler {
+		return &Logger{
+			log: log,
+			h:   h,
+		}
+	}
+}
+
 // ServeHTTP implementation.
 func (l *Logger) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
