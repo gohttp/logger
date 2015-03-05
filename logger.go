@@ -7,7 +7,8 @@ import "time"
 
 // Logger middleware.
 type Logger struct {
-	h http.Handler
+	h   http.Handler
+	log *log.Logger
 }
 
 // wrapper to capture status.
@@ -33,7 +34,10 @@ func (w *wrapper) Write(b []byte) (int, error) {
 // New logger middleware.
 func New() func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
-		return &Logger{h}
+		return &Logger{
+			log: log.Log,
+			h:   h,
+		}
 	}
 }
 
@@ -41,12 +45,12 @@ func New() func(http.Handler) http.Handler {
 func (l *Logger) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	res := &wrapper{w, 0, 200}
-	log.Info(">> %s %s", r.Method, r.RequestURI)
+	l.log.Info(">> %s %s", r.Method, r.RequestURI)
 	l.h.ServeHTTP(res, r)
 	size := humanize.Bytes(uint64(res.written))
 	if res.status >= 500 {
-		log.Error("<< %s %s %d (%s) in %s", r.Method, r.RequestURI, res.status, size, time.Since(start))
+		l.log.Error("<< %s %s %d (%s) in %s", r.Method, r.RequestURI, res.status, size, time.Since(start))
 	} else {
-		log.Info("<< %s %s %d (%s) in %s", r.Method, r.RequestURI, res.status, size, time.Since(start))
+		l.log.Info("<< %s %s %d (%s) in %s", r.Method, r.RequestURI, res.status, size, time.Since(start))
 	}
 }
