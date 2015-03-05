@@ -11,6 +11,11 @@ type Logger struct {
 	log *log.Logger
 }
 
+// SetLogger sets the logger to `log`.
+func (l *Logger) SetLogger(log *log.Logger) {
+	l.log = log
+}
+
 // wrapper to capture status.
 type wrapper struct {
 	http.ResponseWriter
