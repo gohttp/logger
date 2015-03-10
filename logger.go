@@ -60,12 +60,17 @@ func NewLogger(log *log.Logger) func(http.Handler) http.Handler {
 func (l *Logger) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	res := &wrapper{w, 0, 200}
+
 	l.log.Info(">> %s %s", r.Method, r.RequestURI)
 	l.h.ServeHTTP(res, r)
 	size := humanize.Bytes(uint64(res.written))
-	if res.status >= 500 {
+
+	switch {
+	case res.status >= 500:
 		l.log.Error("<< %s %s %d (%s) in %s", r.Method, r.RequestURI, res.status, size, time.Since(start))
-	} else {
+	case res.status >= 400:
+		l.log.Warning("<< %s %s %d (%s) in %s", r.Method, r.RequestURI, res.status, size, time.Since(start))
+	default:
 		l.log.Info("<< %s %s %d (%s) in %s", r.Method, r.RequestURI, res.status, size, time.Since(start))
 	}
 }
